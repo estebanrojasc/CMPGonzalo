@@ -1,0 +1,8 @@
+   __pycache__
+   *.pyc
+   .git
+   .env
+   .venv
+   *.pdf
+   chroma_db/
+   output_bloques/
