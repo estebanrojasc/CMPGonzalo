@@ -5,3 +5,5 @@ __pycache__/
 test.py
 testing_blob.py
 testi_api.py
+.env.example
+.env
