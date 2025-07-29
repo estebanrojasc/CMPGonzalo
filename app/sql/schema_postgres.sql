@@ -44,7 +44,9 @@ CREATE TABLE graficos (
     pagina INTEGER NOT NULL,
     altura_px INTEGER,
     contenido BYTEA NOT NULL,
+    descripcion_ia TEXT, -- Descripción generada por la IA
     ruta_archivo VARCHAR(255),
+    fecha_grafico DATE, -- La fecha de los datos que muestra el gráfico
     tipo_grafico VARCHAR(50), -- línea, barra, etc.
     categoria VARCHAR(50), -- inventario, precios, producción, etc.
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -73,20 +75,6 @@ CREATE TABLE metadatos (
     valor TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(tabla_referencia, registro_id, clave)
-);
-
-
--- Tabla para logs de errores y eventos
-CREATE TABLE logs (
-    id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    nivel VARCHAR(20) NOT NULL, -- ERROR, WARNING, INFO, DEBUG
-    fuente VARCHAR(50) NOT NULL, -- Nombre del módulo o componente
-    mensaje TEXT NOT NULL,
-    detalles JSONB, -- Para almacenar detalles adicionales en formato JSON
-    stack_trace TEXT,
-    resuelto BOOLEAN DEFAULT FALSE,
-    fecha_resolucion TIMESTAMP
 );
 
 -- Tabla para logs específicos de procesamiento de documentos
@@ -122,8 +110,6 @@ CREATE INDEX idx_noticias_fecha ON noticias(fecha_noticia);
 CREATE INDEX idx_noticias_fuente ON noticias(fuente);
 CREATE INDEX idx_precios_fecha ON precios(fecha_precio);
 CREATE INDEX idx_inventarios_fecha ON inventarios(fecha_dato);
-CREATE INDEX idx_logs_timestamp ON logs(timestamp);
-CREATE INDEX idx_logs_nivel ON logs(nivel);
 CREATE INDEX idx_logs_procesamiento_documento ON logs_procesamiento(documento_id);
 CREATE INDEX idx_logs_procesamiento_estado ON logs_procesamiento(estado);
 CREATE INDEX idx_logs_tareas_documento ON logs_tareas(documento_id);

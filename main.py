@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile
@@ -8,6 +8,16 @@ from datetime import datetime
 from typing import Dict, Any
 import logging
 from contextlib import asynccontextmanager
+from pydantic import BaseModel
+import base64
+import hashlib
+from app.config.settings import *
+from app.services.file_storage import BlobStorage
+from app.services.vector_db import QdrantManager
+from app.ai.classify import classify_with_ai
+from app.ai.extract_text import extract_first_page_text
+from app.pipeline.task import process_pdf_automatically
+from app.pipeline.utils import sanitize_for_logging
 
 # Configurar logging
 logging.basicConfig(
@@ -16,24 +26,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Importar las funciones necesarias
-from app.run_pipeline import process_pdf_automatically
-from app.fileBob import BlobStorage
-from app.classifyInit import classify_with_ai, extract_first_page_text
-from app.vector_db import QdrantManager # Importar el QdrantManager
-import hashlib
+
+class PDFPayload(BaseModel):
+    name: str
+    contentBytes: str  # Contenido del archivo en Base64
+    contentType: str
 
 # Crear instancia global de BlobStorage
 blob_storage = None
+qdrant_manager = None  # Nueva variable global
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Código que se ejecuta al iniciar
     global blob_storage
+    global qdrant_manager
     logger.info("Iniciando aplicación...")
     try:
         blob_storage = BlobStorage()
-        logger.info("Conexión a Blob Storage establecida")
+        qdrant_manager = QdrantManager()
+        logger.info("Conexiones a Blob Storage y Qdrant establecidas")
         yield
     except Exception as e:
         logger.error(f"Error al iniciar la aplicación: {e}")
@@ -76,16 +88,16 @@ def get_file_hash(file_path: str) -> str:
     return sha256_hash.hexdigest()
 
 @app.post("/procesar_pdf")
-async def procesar_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
-    if not file.filename.endswith(".pdf"):
+async def procesar_pdf(payload: PDFPayload) -> Dict[str, Any]:
+    if "pdf" not in payload.contentType.lower():
         raise HTTPException(status_code=400, detail="El archivo debe ser un PDF")
 
     temp_file_path = None
     try:
-        # 1. Guardar archivo temporalmente
+        # 1. Decodificar Base64 y guardar archivo temporalmente
+        file_content = base64.b64decode(payload.contentBytes)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            contents = await file.read()
-            tmp.write(contents)
+            tmp.write(file_content)
             temp_file_path = tmp.name
             logger.info(f"Archivo temporal creado: {temp_file_path}")
 
@@ -108,7 +120,7 @@ async def procesar_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
         
         if not success:
             if "ya existe" in message:
-                logger.warning(f"Documento duplicado: {file.filename}")
+                logger.warning(f"Documento duplicado: {payload.name}")
                 raise HTTPException(
                     status_code=409,
                     detail={
@@ -121,7 +133,7 @@ async def procesar_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
 
         # 5. Procesar el documento (solo si es nuevo)
         logger.info("Iniciando procesamiento del documento...")
-        resultados = process_pdf_automatically(temp_file_path, file_hash)
+        resultados = process_pdf_automatically(temp_file_path, file_hash, qdrant_manager)
 
         # 6. Preparar respuesta
         response = {
@@ -136,8 +148,14 @@ async def procesar_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
             "resultados": resultados
         }
 
-        logger.info("Procesamiento completado exitosamente")
-        return JSONResponse(content=response, status_code=200)
+        # Usamos nuestra función para sanear la respuesta
+        sanitized_response = sanitize_for_logging(response)
+        
+        # Logueamos la versión saneada
+        logger.info(f"Procesamiento completado. Respuesta: {json.dumps(sanitized_response, indent=2)}")
+        
+        # Devolvemos la RESPUESTA SANEADA, con el base64 ya truncado
+        return JSONResponse(content=sanitized_response, status_code=200)
 
     except HTTPException as he:
         # Re-lanzar excepciones HTTP

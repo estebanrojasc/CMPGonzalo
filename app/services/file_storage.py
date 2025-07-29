@@ -1,12 +1,15 @@
 import hashlib
 from azure.storage.blob import BlobServiceClient
 import os
-from typing import Optional, Tuple
+from typing import Tuple
+
+from app.config.settings import *
+
 
 class BlobStorage:
     def __init__(self):
-        self.connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-        self.container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
+        self.connection_string = AZURE_STORAGE_CONNECTION_STRING
+        self.container_name = AZURE_STORAGE_CONTAINER_NAME
         self.blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
         self.container_client = self.blob_service_client.get_container_client(self.container_name)
 

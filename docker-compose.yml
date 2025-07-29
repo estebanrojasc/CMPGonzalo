@@ -1,18 +1,58 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - ./app:/usr/src/app/app
-      - ./main.py:/usr/src/app/main.py
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   # Montar el código local en el contenedor para desarrollo.
+  #   # Los cambios que hagas en tu máquina se reflejarán dentro del contenedor.
+  #   volumes:
+  #     - ./app:/usr/src/app/app
+  #     - ./main.py:/usr/src/app/main.py
+  #   ports:
+  #     - "8001:8000" # Cambiado a 8001 para evitar conflictos si se descomenta
+  #   # Cargar variables de entorno desde un archivo .env en la misma carpeta
+  #   env_file:
+  #     - .env
+  #   # El comando para iniciar el servidor FastAPI.
+  #   # Uvicorn es el servidor ASGI que ejecuta FastAPI.
+  #   # --reload: Reinicia el servidor automáticamente cuando detecta cambios en el código. Ideal para desarrollo.
+  #   # --host 0.0.0.0: Permite que el servidor sea accesible desde fuera del contenedor.
+  #   command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  api:
+    build: .
+    container_name: my_fastapi_app
     ports:
       - "8000:8000"
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - postgres
     environment:
-      AZURE_OPENAI_API_KEY: "${AZURE_OPENAI_API_KEY}"
-      AZURE_OPENAI_ENDPOINT: "https://cmpaiservice.openai.azure.com"
-      AZURE_OPENAI_DEPLOYMENT: "gpt-4o-mini"
-      AZURE_STORAGE_CONNECTION_STRING: "${AZURE_STORAGE_CONNECTION_STRING}"
-      AZURE_STORAGE_CONTAINER_NAME: "${AZURE_STORAGE_CONTAINER_NAME}"
-      OPENAI_API_KEY: "${OPENAI_API_KEY}"
-    command: python main.py
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING}
+      - AZURE_STORAGE_CONTAINER_NAME=${AZURE_STORAGE_CONTAINER_NAME}
+      - QDRANT_URL=${QDRANT_URL}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - POSTGRES_DB=comercial
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST=postgres # Se añade para ser explícitos
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      - POSTGRES_DB=comercial
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./app/sql/schema_postgres.sql:/docker-entrypoint-initdb.d/init.sql # Añade esta línea
+    restart: unless-stopped
+
+volumes:
+  postgres_data: {}

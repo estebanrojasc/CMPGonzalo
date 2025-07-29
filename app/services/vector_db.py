@@ -1,14 +1,15 @@
 import qdrant_client
 from qdrant_client.http import models
 from sentence_transformers import SentenceTransformer
-import os
-import numpy as np
+
+
+from app.config.settings import *
 
 class QdrantManager:
     def __init__(self):
         self.client = qdrant_client.QdrantClient(
-            url=os.getenv("QDRANT_URL"), 
-            api_key=os.getenv("QDRANT_API_KEY"),
+            url=QDRANT_URL, 
+            api_key=QDRANT_API_KEY,
         )
         # Usar un modelo de embedding más ligero y rápido si es posible
         self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')

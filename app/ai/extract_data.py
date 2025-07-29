@@ -1,19 +1,17 @@
-# Ejemplo conceptual de clasificador con instructor
+
 import instructor
 from openai import OpenAI
 from pydantic import BaseModel, Field
-from typing import Literal, Optional, List, Dict, Any  
-from PyPDF2 import PdfReader
+from typing import List, Optional
 from datetime import date
-from app.extractGraph import extraer_graficos_mysteel
-import os
 
-# Parchear el cliente de OpenAI con instructor
-client = instructor.from_openai(OpenAI(api_key=os.getenv("OPENAI_API_KEY")))
+from app.config.settings import *
+
+client = instructor.from_openai(OpenAI(api_key=OPENAI_API_KEY))
 
 class PrecioConFecha(BaseModel):
-    valor: float
-    fecha: date
+    valor: float = Field(..., description="El valor numérico del precio/inventario.")
+    fecha: Optional[date] = Field(None, description="La fecha asociada al valor, si está disponible.")
 
 class DatosPlatts(BaseModel):
     precio_62_cfr_china: Optional[PrecioConFecha] = None
@@ -28,19 +26,22 @@ class DatosBaltic(BaseModel):
     c3_tubarao_qingdao: Optional[PrecioConFecha] = None
 
 class DatosInventarioMysteel(BaseModel):
-    pellet: PrecioConFecha
-    concentrate: PrecioConFecha
-    lump: PrecioConFecha
-    fines: PrecioConFecha
-    australian_iron_ore: PrecioConFecha
-    brazilian_iron_ore: PrecioConFecha
+    pellet: Optional[PrecioConFecha] = None
+    concentrate: Optional[PrecioConFecha] = None
+    lump: Optional[PrecioConFecha] = None
+    fines: Optional[PrecioConFecha] = None
+    australian_iron_ore: Optional[PrecioConFecha] = None
+    brazilian_iron_ore: Optional[PrecioConFecha] = None
 
 class ResumenNoticia(BaseModel):
-    titulo: str
-    resumen: str
-    sentimiento: str = Field(..., description="El sentimiento de la noticia: Positivo, Negativo o Neutral.")
+    """Representa una única noticia extraída de un documento."""
+    titulo: str = Field(..., description="El titular principal de la noticia.")
+    resumen: str = Field(..., description="Un resumen conciso de la noticia en 2-3 frases.")
+    sentimiento: str = Field(..., description="El sentimiento de mercado (Positivo, Negativo, Neutral).")
+    fecha_noticia: Optional[date] = Field(None, description="La fecha de publicación de la noticia, si se encuentra.")
 
 class NoticiasMysteel(BaseModel):
+    """Una lista de todas las noticias importantes encontradas en el documento."""
     noticias: List[ResumenNoticia]
 
 def extraer_platts(texto: str) -> DatosPlatts:
@@ -102,19 +103,16 @@ def extraer_noticias_mysteel(texto: str) -> NoticiasMysteel:
         model="gpt-4o-mini",
         response_model=NoticiasMysteel,
         messages=[
-            {"role": "system", "content": "Eres un analista experto. Identifica las noticias más importantes del texto, extrae su titular, un breve resumen y su sentimiento de mercado."},
+            {"role": "system", "content": "Eres un analista experto. Identifica las noticias más importantes del texto, extrae su titular, un breve resumen, su sentimiento de mercado y la fecha de la noticia si está disponible."},
             {"role": "user", "content": texto}
         ]
     )
 
-
-# Diccionario para llamar a la función correcta dinámicamente
 EXTRACTORS = {
     "Platts": extraer_platts,
     "FastMarkets": extraer_fastmarkets,
     "Baltic": extraer_baltic,
     # Añadimos las nuevas funciones específicas para tareas
     "extraer_inventario_mysteel": extraer_inventario_mysteel,
-    "extraer_noticias_mysteel": extraer_noticias_mysteel,
-    "extraer_graficos_mysteel": extraer_graficos_mysteel
+    "extraer_noticias_mysteel": extraer_noticias_mysteel
 }
