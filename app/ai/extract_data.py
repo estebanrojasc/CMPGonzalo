@@ -6,8 +6,7 @@ from typing import List, Optional
 from datetime import date
 
 from app.config.settings import *
-
-client = instructor.from_openai(OpenAI(api_key=OPENAI_API_KEY))
+from app.config.client import client, model_name
 
 class PrecioConFecha(BaseModel):
     valor: float = Field(..., description="El valor numérico del precio/inventario.")
@@ -40,13 +39,13 @@ class ResumenNoticia(BaseModel):
     sentimiento: str = Field(..., description="El sentimiento de mercado (Positivo, Negativo, Neutral).")
     fecha_noticia: Optional[date] = Field(None, description="La fecha de publicación de la noticia, si se encuentra.")
 
-class NoticiasMysteel(BaseModel):
+class ListaNoticias(BaseModel):
     """Una lista de todas las noticias importantes encontradas en el documento."""
     noticias: List[ResumenNoticia]
 
 def extraer_platts(texto: str) -> DatosPlatts:
     return client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model_name,
         response_model=DatosPlatts,
         messages=[
             {"role": "system", "content": """Eres un experto en extracción de precios de reportes financieros. Extrae los siguientes precios desde el texto, asegurándote de identificar la **fecha exacta asociada a cada uno**:
@@ -63,7 +62,7 @@ Devuelve solo los campos que estén presentes en el texto con su respectiva fech
 
 def extraer_fastmarkets(texto: str) -> DatosFastmarkets:
     return client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model_name,
         response_model=DatosFastmarkets,
         messages=[
             {"role": "system", "content": """Eres un experto en extracción de precios de reportes financieros. Extrae los siguientes precios desde el texto, asegurándote de identificar la **fecha exacta asociada a cada uno**:
@@ -79,7 +78,7 @@ Devuelve solo los campos que estén presentes en el texto con su respectiva fech
 
 def extraer_baltic(texto: str) -> DatosBaltic:
     return client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model_name,
         response_model=DatosBaltic,
         messages=[
             {"role": "system", "content": """Eres un experto en extracción de precios de reportes financieros. Extrae el precio de C3 Tubarao to Qingdao **Si un precio no está presente o no puede ser identificado con claridad, omítelo y no lo inventes.**
@@ -90,7 +89,7 @@ Devuelve solo los campos que estén presentes en el texto con su respectiva fech
 
 def extraer_inventario_mysteel(texto: str) -> DatosInventarioMysteel:
     return client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model_name,
         response_model=DatosInventarioMysteel,
         messages=[
             {"role": "system", "content": "Eres un experto en extraer datos de tablas de inventarios. Encuentra todos los valores de las columnas 'Pellet', 'Concentrate', 'Lump', 'Fines', 'Australian Iron Ore' y 'Brazilian Iron Ore' y la fecha del reporte desde el texto."},
@@ -98,12 +97,12 @@ def extraer_inventario_mysteel(texto: str) -> DatosInventarioMysteel:
         ]
     )
 
-def extraer_noticias_mysteel(texto: str) -> NoticiasMysteel:
+def extraer_noticias(texto: str) -> ListaNoticias:
     return client.chat.completions.create(
-        model="gpt-4o-mini",
-        response_model=NoticiasMysteel,
+        model=model_name,
+        response_model=ListaNoticias,
         messages=[
-            {"role": "system", "content": "Eres un analista experto. Identifica las noticias más importantes del texto, extrae su titular, un breve resumen, su sentimiento de mercado y la fecha de la noticia si está disponible."},
+            {"role": "system", "content": "Eres un analista experto en español. Identifica las noticias más importantes del texto, extrae su titular, un breve resumen, su sentimiento de mercado y la fecha de la noticia si está disponible."},
             {"role": "user", "content": texto}
         ]
     )
@@ -114,5 +113,5 @@ EXTRACTORS = {
     "Baltic": extraer_baltic,
     # Añadimos las nuevas funciones específicas para tareas
     "extraer_inventario_mysteel": extraer_inventario_mysteel,
-    "extraer_noticias_mysteel": extraer_noticias_mysteel
+    "extraer_noticias": extraer_noticias,
 }

@@ -6,8 +6,7 @@ from typing import Literal
 from datetime import date
 
 from app.config.settings import *
-
-client = instructor.from_openai(OpenAI(api_key=OPENAI_API_KEY))
+from app.config.client import client, model_name
 
 class DocumentSource(BaseModel):
     source: Literal["Mysteel", "FastMarkets", "Platts", "Baltic", "Other"]
@@ -18,7 +17,7 @@ def classify_with_ai(text_from_first_page: str) -> DocumentSource:
     Clasifica el texto usando gpt-4o-mini con few-shot-prompting y salida estructurada.
     """
     return client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model_name,
         response_model=DocumentSource,
         messages=[
             {"role": "system", "content": "Eres un asistente experto en clasificar reportes. Identifica la fuente y fecha del siguiente texto y responde usando la herramienta proporcionada."},

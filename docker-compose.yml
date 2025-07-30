@@ -19,40 +19,57 @@ services:
   #   # --host 0.0.0.0: Permite que el servidor sea accesible desde fuera del contenedor.
   #   command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
-  api:
+  app:
     build: .
-    container_name: my_fastapi_app
+    container_name: cmp_marketresearch
     ports:
       - "8000:8000"
     volumes:
       - .:/usr/src/app
+    env_file:
+      - .env
     depends_on:
-      - postgres
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING}
-      - AZURE_STORAGE_CONTAINER_NAME=${AZURE_STORAGE_CONTAINER_NAME}
-      - QDRANT_URL=${QDRANT_URL}
-      - QDRANT_API_KEY=${QDRANT_API_KEY}
-      - POSTGRES_DB=comercial
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_HOST=postgres # Se añade para ser explícitos
-    restart: unless-stopped
+      - sqlserver_db # Cambiado de 'postgres' a 'sqlserver_db'
+      - qdrant
 
-  postgres:
-    image: postgres:13
-    container_name: postgres_db
-    environment:
-      - POSTGRES_DB=comercial
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+  sqlserver_db:
+    build: ./mssql_setup
+    container_name: sqlserver_db
+    # Cambiamos 'environment' por 'env_file' para que lea el .env
+    env_file:
+      - .env
     ports:
-      - "5432:5432"
+      - "1433:1433"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./app/sql/schema_postgres.sql:/docker-entrypoint-initdb.d/init.sql # Añade esta línea
+      - sqlserver_data:/var/opt/mssql
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      # Montar el volumen de datos persistentes
+      - qdrant_data:/qdrant/storage
+      # Montar nuestro archivo de configuración personalizado
+      - ./qdrant_config.yaml:/qdrant/config/config.yaml
+    # Pasar las variables de entorno desde el archivo .env
+    env_file:
+      - .env
+
+  # --- NUEVO SERVICIO PARA BACKUPS AUTOMÁTICOS ---
+  qdrant_backup_scheduler:
+    build: ./cron_jobs
+    container_name: qdrant_backup_scheduler
+    # Asegurarnos de que tenga acceso a las variables de entorno del .env
+    env_file:
+      - .env
+    # Este servicio depende de qdrant. No se iniciará hasta que qdrant esté listo.
+    depends_on:
+      - qdrant
+    # No necesita puertos, ya que solo se comunica internamente.
+    # El restart asegura que si falla, se reinicie.
     restart: unless-stopped
 
 volumes:
-  postgres_data: {}
+  qdrant_data:
+  sqlserver_data:

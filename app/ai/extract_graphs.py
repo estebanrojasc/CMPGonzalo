@@ -9,8 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 
 from app.config.settings import *
-
-client = instructor.patch(OpenAI(api_key=OPENAI_API_KEY))
+from app.config.client import client, model_name
 
 class GraficoAnalizado(BaseModel):
     """Representa el análisis de un único gráfico."""
@@ -74,7 +73,7 @@ def extraer_graficos_mysteel(pdf_path: str) -> Dict[str, Any]:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=model_name,
             response_model=AnalisisDeGraficos,
             messages=[
                 {

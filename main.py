@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Security
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile
@@ -14,10 +14,12 @@ import hashlib
 from app.config.settings import *
 from app.services.file_storage import BlobStorage
 from app.services.vector_db import QdrantManager
+from app.services.db_manager import db_manager
 from app.ai.classify import classify_with_ai
 from app.ai.extract_text import extract_first_page_text
 from app.pipeline.task import process_pdf_automatically
 from app.pipeline.utils import sanitize_for_logging
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 # Configurar logging
 logging.basicConfig(
@@ -32,34 +34,64 @@ class PDFPayload(BaseModel):
     contentBytes: str  # Contenido del archivo en Base64
     contentType: str
 
-# Crear instancia global de BlobStorage
-blob_storage = None
-qdrant_manager = None  # Nueva variable global
+# Se declaran las variables globales, se inicializarán en el lifespan
+blob_storage: BlobStorage | None = None
+qdrant_manager: QdrantManager | None = None
+
+# Esquema de seguridad
+security = HTTPBearer()
+
+async def verify_token(credentials: HTTPAuthorizationCredentials = Security(security)):
+    """Verifica el Bearer Token"""
+    if not API_SECURITY_TOKEN:
+        # Si no se ha configurado un token en el servidor, se permite el acceso.
+        # En producción, podrías querer lanzar un error aquí.
+        return
+    
+    if credentials.scheme != "Bearer" or credentials.credentials != API_SECURITY_TOKEN:
+        raise HTTPException(
+            status_code=403,
+            detail="Token inválido o no proporcionado"
+        )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Código que se ejecuta al iniciar
-    global blob_storage
-    global qdrant_manager
-    logger.info("Iniciando aplicación...")
-    try:
-        blob_storage = BlobStorage()
-        qdrant_manager = QdrantManager()
-        logger.info("Conexiones a Blob Storage y Qdrant establecidas")
-        yield
-    except Exception as e:
-        logger.error(f"Error al iniciar la aplicación: {e}")
-        raise
-    finally:
-        # Código que se ejecuta al cerrar
-        logger.info("Cerrando aplicación...")
+    """
+    Context manager to handle application startup and shutdown events.
+    """
+    global blob_storage, qdrant_manager
+    print("🚀 Iniciando aplicación...")
 
-app = FastAPI(
-    title="PDF Processor API",
-    description="Procesa PDFs usando clasificación automática y extracción estructurada.",
-    version="1.0.0",
-    lifespan=lifespan
-)
+    try:
+        # Inicializar Azure Blob Storage
+        blob_storage = BlobStorage()
+        print("✅ Conexión a Azure Blob Storage establecida.")
+    except Exception as e:
+        print(f"🔥 Error al conectar con Azure Blob Storage: {e}")
+
+    try:
+        # Inicializar el pool de conexiones a la base de datos
+        db_manager.initialize_pool()
+        print("✅ Conexión a SQL Server establecida.")
+    except Exception as e:
+        print(f"🔥 Error al conectar con SQL Server: {e}")
+
+    try:
+        # Inicializar el gestor de Qdrant (la inicialización ocurre en el constructor)
+        qdrant_manager = QdrantManager()
+        print("✅ Conexión a Qdrant establecida.")
+    except Exception as e:
+        print(f"🔥 Error al conectar con Qdrant: {e}")
+
+    yield  # La aplicación se ejecuta aquí
+
+    print("🌙 Cerrando aplicación...")
+    # Cerrar el pool de conexiones
+    if db_manager:
+        db_manager.close_pool()
+        print("✅ Conexiones a SQL Server cerradas.")
+
+app = FastAPI(lifespan=lifespan)
 
 # CORS middleware
 app.add_middleware(
@@ -87,7 +119,7 @@ def get_file_hash(file_path: str) -> str:
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 
-@app.post("/procesar_pdf")
+@app.post("/procesar_pdf", dependencies=[Security(verify_token)])
 async def procesar_pdf(payload: PDFPayload) -> Dict[str, Any]:
     if "pdf" not in payload.contentType.lower():
         raise HTTPException(status_code=400, detail="El archivo debe ser un PDF")

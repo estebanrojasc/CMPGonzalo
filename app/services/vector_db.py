@@ -7,10 +7,15 @@ from app.config.settings import *
 
 class QdrantManager:
     def __init__(self):
-        self.client = qdrant_client.QdrantClient(
-            url=QDRANT_URL, 
-            api_key=QDRANT_API_KEY,
-        )
+        # Prepara los argumentos para el cliente de Qdrant
+        client_args = {'url': QDRANT_URL}
+        
+        # Solo añade la api_key si tiene un valor
+        if QDRANT_API_KEY:
+            client_args['api_key'] = QDRANT_API_KEY
+
+        self.client = qdrant_client.QdrantClient(**client_args)
+        
         # Usar un modelo de embedding más ligero y rápido si es posible
         self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
         self.vector_size = self.embedding_model.get_sentence_embedding_dimension()

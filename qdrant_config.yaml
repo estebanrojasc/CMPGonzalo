@@ -1,0 +1,9 @@
+# qdrant_config.yaml
+# Configuración para habilitar los snapshots en un almacenamiento remoto.
+
+storage:
+  snapshots_config:
+    remote_storage:
+      type: "azure"
+      container_name: ${AZURE_STORAGE_CONTAINER_NAME}
+      # La connection string se pasa por variable de entorno por seguridad 

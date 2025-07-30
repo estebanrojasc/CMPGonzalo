@@ -24,7 +24,7 @@ TASK_REGISTRY = {
     },
     "get_mysteel_news": {
         "source": "Mysteel",
-        "extractor_func": EXTRACTORS["extraer_noticias_mysteel"],
+        "extractor_func": EXTRACTORS["extraer_noticias"],
         "search_queries": ["news", "market commentary", "outlook"],
         "needs_pdf_path": False
     },
@@ -41,16 +41,34 @@ TASK_REGISTRY = {
         "search_queries": ["Tabla o texto con los precios de Iron Ore Platts 62% y 65% CFR China con su fecha", "Tabla o texto con los precios de IOMGD00 con su fecha"],
         "extractor_func": EXTRACTORS["Platts"]
     },
+    # "get_platts_news": {
+    #     "source": "Platts",
+    #     "extractor_func": EXTRACTORS["extraer_noticias"],
+    #     "search_queries": ["news", "market commentary", "outlook", "platts news"],
+    #     "needs_pdf_path": False
+    # },
     "get_fastmarkets_prices": {
         "source": "FastMarkets",
         "search_queries": ["Tabla o texto con los precios de Iron Ore MB-IRO-0009 y MB-IRO-0019 VIU con su fecha de publicación"],
         "extractor_func": EXTRACTORS["FastMarkets"]
     },
+    # "get_fastmarkets_news": {
+    #     "source": "FastMarkets",
+    #     "extractor_func": EXTRACTORS["extraer_noticias"],
+    #     "search_queries": ["news", "market commentary", "outlook", "fastmarkets news"],
+    #     "needs_pdf_path": False
+    # },
     "get_baltic_prices": {
         "source": "Baltic",
         "search_queries": ["Tabla o texto con el precio del flete C3 Tubarao to Qingdao con su fecha"],
         "extractor_func": EXTRACTORS["Baltic"]
     },
+    # "get_baltic_news": {
+    #     "source": "Baltic",
+    #     "extractor_func": EXTRACTORS["extraer_noticias"],
+    #     "search_queries": ["news", "freight market", "baltic dry index"],
+    #     "needs_pdf_path": False
+    # },
 }
 
 # 3. La función `run_task` ahora incluye logging

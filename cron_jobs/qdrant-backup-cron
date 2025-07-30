@@ -1,0 +1,4 @@
+# qdrant-backup-cron
+
+# Ejecutar el script de respaldo todos los días a las 3:00 AM.
+0 3 * * * /usr/local/bin/backup.sh 
