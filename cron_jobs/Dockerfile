@@ -6,6 +6,7 @@ RUN apk add --no-cache curl dcron jq
 
 # Copiar nuestro script de backup y darle permisos
 COPY backup.sh /usr/local/bin/backup.sh
+RUN sed -i 's/\r$//' /usr/local/bin/backup.sh
 RUN chmod +x /usr/local/bin/backup.sh
 
 # Copiar nuestro archivo de definición de cron
@@ -21,6 +22,7 @@ RUN chmod 0644 /etc/crontabs/root
 
 # Copiar el nuevo script de punto de entrada y darle permisos
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Establecer nuestro nuevo script como el punto de entrada

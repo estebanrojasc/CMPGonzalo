@@ -23,6 +23,11 @@ WORKDIR /usr/src/app
 COPY setup.sql .
 COPY entrypoint.sh .
 
+# --- INICIO: Corregir finales de línea ---
+# Convertir el script a formato Unix para evitar errores en Linux.
+RUN sed -i 's/\r$//' entrypoint.sh
+# --- FIN: Corregir finales de línea ---
+
 # Hacer ejecutable nuestro script de entrada
 RUN chmod +x entrypoint.sh
 

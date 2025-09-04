@@ -16,8 +16,8 @@ RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/wh
 
 # Antes de tu "pip install"
 RUN apt-get update && apt-get install -y gnupg2
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-RUN curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list
+RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/11/prod bullseye main" > /etc/apt/sources.list.d/mssql-release.list
 
 RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17 mssql-tools
 RUN echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
@@ -32,8 +32,8 @@ WORKDIR /usr/src/app
 # --- INICIO: Instalar Drivers, netcat y otras herramientas ---
 # Añadimos 'netcat-openbsd' para nuestro script de espera.
 RUN apt-get update && apt-get install -y curl gnupg ca-certificates netcat-openbsd && \
-    curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/microsoft.gpg && \
-    echo "deb [arch=amd64] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list && \
+    curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list && \
     apt-get update && \
     ACCEPT_EULA=Y apt-get install -y msodbcsql17 && \
     apt-get clean && \
@@ -52,6 +52,11 @@ COPY ./app ./app
 COPY ./main.py .
 COPY wait-for-db.sh .
 
+# --- INICIO: Corregir finales de línea ---
+# Convertir el script a formato Unix para evitar errores en Linux.
+RUN sed -i 's/\r$//' wait-for-db.sh
+# --- FIN: Corregir finales de línea ---
+
 # Dar permisos de ejecución al script
 RUN chmod +x wait-for-db.sh
 
@@ -62,4 +67,5 @@ ENV PATH="/opt/venv/bin:$PATH"
 EXPOSE 8000
 
 # Comando para ejecutar la aplicación, esperando primero a la BD
-CMD ["./wait-for-db.sh", "sqlserver_db", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Se corrige el formato del script al inicio y luego se ejecuta.
+CMD ["/bin/sh", "-c", "sed -i 's/\r$//' wait-for-db.sh && ./wait-for-db.sh sqlserver_db uvicorn main:app --host 0.0.0.0 --port 8000"]
