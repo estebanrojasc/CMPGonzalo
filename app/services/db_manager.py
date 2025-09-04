@@ -67,11 +67,23 @@ class DBManager:
             return
         task_savers = {
             "get_mysteel_inventory": self.save_inventories,
-            "get_mysteel_news": self.save_news,
+            #"get_mysteel_news": self.save_news,
             "get_platts_prices": self.save_prices,
             "get_fastmarkets_prices": self.save_prices,
             "get_baltic_prices": self.save_prices,
             "get_mysteel_graphs": self.save_graphs,
+            "fastmarkets_news_market_wrap": self.save_news,
+            "fastmarkets_news_china_housing_stimulus": self.save_news,
+            "fastmarkets_news_price_benchmarks_inline": self.save_news,
+            "fastmarkets_news_mena_green_steel": self.save_news,
+            "platts_news_market_wrap_new_year": self.save_news,
+            "platts_news_bf_pellet_premiums_atlantic": self.save_news,
+            "platts_news_dr_pellet_premiums_by_region": self.save_news,
+            "platts_news_tosyali_dri_libya_angola_solar": self.save_news,
+            "platts_news_asian_prices_lull_lny": self.save_news,
+            "platts_news_metso_filtration_india_pellets": self.save_news,
+            "platts_news_vale_greeniron_h2_dr_brazil_sweden": self.save_news,
+            "platts_news_ferro_sul_brazil_expansion_high_grade": self.save_news,
         }
         for task_name, data in results.items():
             if task_name in task_savers and data and not data.get("error"):

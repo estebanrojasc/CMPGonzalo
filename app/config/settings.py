@@ -6,7 +6,7 @@ load_dotenv()
 AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 AZURE_STORAGE_CONTAINER_NAME = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-QDRANT_URL = os.getenv("QDRANT_URL")
+QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 
 # Token de seguridad para la API

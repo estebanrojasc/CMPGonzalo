@@ -102,7 +102,7 @@ def extraer_noticias(texto: str) -> ListaNoticias:
         model=model_name,
         response_model=ListaNoticias,
         messages=[
-            {"role": "system", "content": "Eres un analista experto en español. Identifica las noticias más importantes del texto, extrae su titular, un breve resumen, su sentimiento de mercado y la fecha de la noticia si está disponible."},
+            {"role": "system", "content": "Eres un analista experto en español. Identifica las noticias más importantes SÓLO del texto, extrae su titular, un breve resumen, su sentimiento de mercado y la fecha de la noticia si está disponible. MUY IMPORTANTE: La fecha siempre debe estar en formato YYYY-MM-DD."},
             {"role": "user", "content": texto}
         ]
     )

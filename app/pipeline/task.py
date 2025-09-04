@@ -22,12 +22,11 @@ TASK_REGISTRY = {
         ],
         "extractor_func": EXTRACTORS["extraer_inventario_mysteel"]
     },
-    "get_mysteel_news": {
-        "source": "Mysteel",
-        "extractor_func": EXTRACTORS["extraer_noticias"],
-        "search_queries": ["news", "market commentary", "outlook"],
-        "needs_pdf_path": False
-    },
+#    "get_mysteel_news": {
+ #       "source": "Mysteel",
+  #      "extractor_func": EXTRACTORS["extraer_noticias"],
+   ##    "needs_pdf_path": False
+    #},
     "get_mysteel_graphs": {
         "source": "Mysteel",
         "extractor_func": extraer_graficos_mysteel,
@@ -52,6 +51,180 @@ TASK_REGISTRY = {
         "search_queries": ["Tabla o texto con los precios de Iron Ore MB-IRO-0009 y MB-IRO-0019 VIU con su fecha de publicación"],
         "extractor_func": EXTRACTORS["FastMarkets"]
     },
+
+    "fastmarkets_news_market_wrap": {
+        "source": "FastMarkets",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "Fastmarkets iron ore daily wrap",
+            "SGX most-traded contract iron ore previous settlement",
+            "ferrous market sentiment turned bullish after stimulus",
+            "spot vs swaps futures divergence iron ore",
+            "portside market quiet pre-holiday restocking",
+            "Golden Week outlook downstream demand"
+        ],
+        "needs_pdf_path": False
+    },
+
+    "fastmarkets_news_china_housing_stimulus": {
+        "source": "FastMarkets",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "China housing policy easing Shanghai Guangzhou Shenzhen",
+            "minimum down payment first and second homes 15% 20%",
+            "PBOC mortgage refinancing stimulus",
+            "mills expected to resume production if demand picks up",
+            "pre-holiday restocking Golden Week"
+        ],
+        "needs_pdf_path": False
+    },
+
+    "fastmarkets_news_price_benchmarks_inline": {
+        "source": "FastMarkets",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "Fastmarkets index iron ore 62% Fe fines CFR Qingdao",
+            "iron ore 62 Fe fines CFR Qingdao",
+            "Pilbara Blend fines price range",
+            "Mac fines price range",
+            "Jimblebar fines price range",
+            "67.5% Fe pellet feed premium CFR Qingdao",
+            "65% Fe concentrate premium CFR Qingdao",
+            "Citic Pacific concentrate premium",
+            "SIMEC concentrate premium",
+            "Metinvest SevGok concentrate premium"
+        ],
+        "needs_pdf_path": False
+    },
+
+    "fastmarkets_news_mena_green_steel": {
+        "source": "FastMarkets",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "Middle East green steel CBAM transition period",
+            "IRENA Alliance for Industry Decarbonization Emsteel co-chair",
+            "Volkswagen MoU Vulcan Green Steel low-carbon steel",
+            "AGSI net-zero rebar Abu Dhabi",
+            "Essar Steel Saudi Arabia green flat steel approval",
+            "Emsteel Danieli pilot electrical process gas heater",
+            "Emsteel Delong low-carbon raw materials",
+            "Bahrain Steel five-year pellets supply contract",
+            "Vulcan Green Steel hydrogen-ready plant",
+            "CBAM phased implementation 2026 2034"
+        ],
+        "needs_pdf_path": False
+    },
+
+# Añade estos bloques dentro de tu TASK_REGISTRY
+
+    "platts_news_market_wrap_new_year": {
+        "source": "Platts",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "Asian iron ore prices extend gains after New Year",
+            "IODEX 62% Fe CFR North China procurement activities post-holiday demand",
+            "landing margins PBF JMBF cargoes",
+            "buying interest seaborne lump and port lump rise",
+            "BHP sold Newman Fines 61.7% Fe CFR China",
+            "trading patchy return from holidays Singapore time",
+            "Platts assessed the 62% Fe Iron Ore Index CFR North China"
+        ],
+        "needs_pdf_path": False
+    },
+
+    "platts_news_bf_pellet_premiums_atlantic": {
+        "source": "Platts",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "Atlantic contract BF pellet premium negotiations Europe",
+            "BF pellet long-term deals buyers over 62% IODEX basis",
+            "BF pellet long-term sales sellers over 65% IODEX basis",
+            "pellet market oversupply linked to new capacities Europe low demand",
+            "settlements BF pellet premium range over 62% index basis",
+            "Platts monthly Atlantic BF pellet premium assessed on 62% IODEX fines terms"
+        ],
+        "needs_pdf_path": False
+    },
+
+    "platts_news_dr_pellet_premiums_by_region": {
+        "source": "Platts",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "DR pellet demand MENA more positive stable steel production",
+            "DR pellet premium over 65% index basis Q1 negotiations",
+            "Europe low demand DR pellets agreements over 65% index",
+            "Platts DR pellet premium 67.5% Fe pellet over 65% index",
+            "calculated DR pellet premium over 62% index",
+            "monthly all-in DR pellet contract price FOB Brazil"
+        ],
+        "needs_pdf_path": False
+    },
+
+    "platts_news_tosyali_dri_libya_angola_solar": {
+        "source": "Platts",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "Tosyali DRI facility Libya first phase start soon chairman",
+            "Tosyali iron ore beneficiation and steel facility in Angola",
+            "Tosyali commission 1200 MW solar power capacity",
+            "Tosyali Mediterranean basin largest DRI producer Algeria"
+        ],
+        "needs_pdf_path": False
+    },
+
+    "platts_news_asian_prices_lull_lny": {
+        "source": "Platts",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "Asian seaborne iron ore prices decline market lull",
+            "weak fundamentals ahead of Lunar New Year",
+            "seaborne lump premiums dip",
+            "buyers focus on controlling costs weak USD yuan dampen sentiment",
+            "MACF JMBF cargoes change hands port stock prices stable",
+            "spot lump premium upside capped",
+            "Platts assessed the 62% Fe Iron Ore Index CFR North China"
+        ],
+        "needs_pdf_path": False
+    },
+
+    "platts_news_metso_filtration_india_pellets": {
+        "source": "Platts",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "Metso supply filtration technology iron ore slurry pipeline India",
+            "concentrate filtration to make pellets scope includes 16 filters",
+            "fast-opening filter press Metso Plus offering",
+            "blast furnace 63% Fe pellet premium assessed CFR China"
+        ],
+        "needs_pdf_path": False
+    },
+
+    "platts_news_vale_greeniron_h2_dr_brazil_sweden": {
+        "source": "Platts",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "Vale GreenIron feasibility direct reduction facility Brazil",
+            "Vale supply iron ore agglomerates to GreenIron Sandviken Sweden",
+            "hydrogen-based reduction technology residual product water",
+            "assess renewable energy and green hydrogen options"
+        ],
+        "needs_pdf_path": False
+    },
+
+    "platts_news_ferro_sul_brazil_expansion_high_grade": {
+        "source": "Platts",
+        "extractor_func": EXTRACTORS["extraer_noticias"],
+        "search_queries": [
+            "Ferro Sul expand output to high-grade iron ore 8 million mt year",
+            "Para state preliminary license environmental council Semas",
+            "produce sinter feed and lump natural moisture over 62% Fe",
+            "JORC resources sustain output more than 15 years",
+            "Inaja magnetite deposit concentrate DR pellet feed 68-70% Fe"
+        ],
+        "needs_pdf_path": False
+    },
+
+
     # "get_fastmarkets_news": {
     #     "source": "FastMarkets",
     #     "extractor_func": EXTRACTORS["extraer_noticias"],
